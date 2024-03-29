@@ -1,10 +1,10 @@
 # workflow의 이름
-name: cicd-test
+name: Deploy
 
 # 해당 workflow가 언제 실행될 것인지에 대한 트리거를 지정
 on:
   push:
-    branches: [ master ] # main branch로 push 될 때 실행
+    branches: [ main ] # main branch로 push 될 때 실행
 
 # 해당 yml 내에서 사용할 key-value 속성
 env:  
@@ -34,22 +34,22 @@ jobs:
       - name: add Application.properties
         run: touch ./src/main/resources/application.properties
         shell: bash
-
+        
       # github secret으로 등록한 properties 내용 덮어쓰기
       - name: copy Application.properties
         run: echo "${{ secrets.APP_PROPERTIES }}" > ./src/main/resources/application.properties
         shell: bash
-
+        
       # gradle 권한 설정
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
         shell: bash
-
+        
       # 빌드
       - name: Build with Gradle
         run: ./gradlew build
         shell: bash
-
+        
       - name: Make zip file
         run: zip -r ./$GITHUB_SHA.zip .
         shell: bash
@@ -60,15 +60,15 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
+          
       # script files 복사
       - name: Copy script
         run: cp ./scripts/*.sh ./deploy
-
+      
       # S3에 빌드 결과 업로드
       - name: Upload to S3
         run: aws s3 cp --region $AWS_REGION ./$GITHUB_SHA.zip s3://$S3_BUCKET_NAME/$PROJECT_NAME/$GITHUB_SHA.zip
-
+        
       # Deploy 실행
       - name: Deploy
         run: |
